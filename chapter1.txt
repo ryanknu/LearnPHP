@@ -1,0 +1,73 @@
+Client/Server Architecture
+
+The client is the browser. It is designed to make special requests to the server known as "HTTP requests". These requests all have a similar style, one or more headers followed by a body. It is helpful to think of an HTTP request as a file that comes along with some additional data. Here is an example HTTP request:
+
+    POST /home HTTP/1.1
+    Host: www.example.com
+    Accept: */*
+    Content-Type: application/json
+    
+    {"name":"Ryan", "age":26}
+
+OK, so this is an HTTP request. Looking at the headers, we are asking the server (or host) to POST to the resource "/home". We are also saying that we'll accept a response of any kind (*/*) and, that the data we are sending to the server is JSON. There are always two line Windows line breaks between the last header and the beginning of the content body. This is \r\n\r\n, or [0x0d, 0x0a, 0x0d, 0x0a] in character sequences. Lastly, the body contains a little bit of JSON describing myself and goes until the end of the request.
+
+Exercise 1: There are all sorts of HTTP headers available. In Google Chrome, right-click anywhere on any page and click "Inspect" to open up your developer tools. In the panel that appears, open up the "Network" tab. From there, you'll have to click refresh to capture some requests. HTTP requests that the browser makes will appear in the list on the left, click on any one of them to see the request itself. Under the Headers tab, Request Headers section, click the faint "view source" button to see what the HTTP headers for that request look like. Pretty neat, huh?
+
+OK, so now we have a pretty good understanding of what the client is, and what kind of data it sends to the server. Keep in mind that you, as a programmer, will rarely be able to affect what these requests will look like under most circumstances. Web browsers (such as Google Chrome) are programmed to send the most common requests and you can't differ too much without building entirely new tools out of Javascript, which while possible, we'll avoid doing.
+
+The server is a program that runs on another computer, recieves HTTP requests, and sends responses back to their senders. This is where we, as web programmers, focus our efforts. HTTP servers can, and should, examine the entire request before responding, however the most immediate and important piece of data available to the server is the *resource*. In a URI:
+
+    scheme |   host  | program |     resource 
+    http:// localhost :8888     /images/puppies.jpg
+
+In this URI, the scheme is HTTP. This just means we're going to send HTTP messages. The Host is localhost, which is a special word that means "the computer I'm using". This could be replaced with any valid host name that points to any computer, like www.google.com. The :8888 represents a "port", but I'm going to use the word "program". If you have multiple programs running at the same time that run HTTP servers, you can differentiate between the two using their respective port numbers. And finally is the resource, the most important part. It usually refers to a file name, but when it doesn't, it is interpreted by the programmer.
+
+Excercise 2: Open the folder ~ on your mac, to do so, click your name on the left panel of the finder or if it's not there, while in finder click the Go > Go to Folder menu option and type in ~ and hit enter. This will take you to your named user folder, or home folder. Create a new folder, call it "php". Inside that folder, create another folder called "public". Inside public, create yet another folder called "images". Inside images, put in an image of something funny you found on the internet, in a jpeg or png file. Note the file name. As an example, it should look like this:
+
+    + ~
+      + php
+        + public
+          + images
+            - funny.png
+
+Now, use spotlight (command+space bar) to open a program called terminal. This will open a command line interface. Sounds scary, but it isn't. While in a terminal, you are always inside one specific folder on your computer, and everything you do is inside that folder until you change folders. The folder you should be in when you open a terminal is ~. You can tell since it will say your name, followed by the folder, which should be ~ to the left of the text input marker.
+
+To change into your php folder, enter the command
+
+    cd php
+
+This will change your folder to the php folder you made earlier. You can confirm as the ~ that was next to your name will now be the word "php". You can enter the command "ls" and hit enter, to see the listing of files in this directory. It should only list the public folder. Enter the command line
+
+    atom .
+
+Note the space and the period. When you type this, it will open Atom with it's focus on your php folder. You should see your folders in the panel on the left. Let's make a web page. Right click on the "public" folder in Atom and click "New File". Name it "public/home.html". Inside this file we simply need one line:
+
+    <body>
+        <h1>Welcome!</h1>
+        <img src="/images/funny.png" />
+    </body>
+
+This is an XML snippet that will tell the web browser to draw the picture stored at that file. Make sure the file name in your HTML file matches the file name.
+
+The last thing we need to do is write a really quick server program that will tell the server to simply serve these files if they exist. Remember, if a file exists, the server doesn't do any work, however, the more interesting thing happens when requests happen that the server needs to interpret.
+
+Right click on the "php" (topmost) folder in Atom and click "New File". Name the file "server.php". Inside server.php, enter the following code:
+
+    <?php
+    
+    $path = realpath(__DIR__ . '/public' . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if ( __FILE__ !== $path && is_file($path) ) {
+        return false;
+    }
+
+    echo 'I have not written this part of the program yet';
+
+Do not worry about having to understand this code, as it is boiler-plate from this project (https://github.com/zendframework/ZendSkeletonApplication/blob/master/public/index.php) and I have not ever worried about it, but what it does is it tells the server to pass requests for files that exist through without being interpreted.
+
+Finally, we're ready to start up our server. It seems like a marathon, but it makes sense that there would be a bit of set up. To fire up our server, go back to your command line and enter the command:
+
+    php -S 0:8888 server.php public
+
+PHP could do a better job of the syntax of this line, but it's easy enough to use. It specifies that you want to run the server program "server.php" on port 8888. Read the little snippet of text that appears to confirm that your server is running and ready to accept requests. If it is, go into google chrome and point your web browser to http://localhost:8888/home.html. You should see your welcome text and image. Try going to http://localhost:8888/images/funny.png (or whatever you named it). You should see your image but without the rest of the HTML document. Lastly, try browsing to any other URL. You should see the message written at the bottom of your server.php.
+
+In Web Server terminology, it's usually better to say "not found" if a resource isn't found. So modify your program to instead say "Not Found" when something like this happens. Congratulations, you have a simple server with a few static documents set up. At this point, feel free to play around with your HTML and images. Go over to www.w3schools.com and on their homepage they have an HTML exmaple at the top and a CSS example just below it. Blend the HTML example with your home.html, and try creating a file public/css/styles.css and linking it to apply colors, fonts, and paddings to your document. Once you have your web server looking the way you want it, you have completed exercise 2, and chapter 1.
