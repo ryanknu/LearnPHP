@@ -55,7 +55,7 @@ Right click on the "php" (topmost) folder in Atom and click "New File". Name the
 
     <?php
     
-    $path = realpath(__DIR__ . '/public' . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $path = realpath(__DIR__ . '/public' . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
     if ( __FILE__ !== $path && is_file($path) ) {
         return false;
     }
@@ -66,7 +66,7 @@ Do not worry about having to understand this code, as it is boiler-plate from th
 
 Finally, we're ready to start up our server. It seems like a marathon, but it makes sense that there would be a bit of set up. To fire up our server, go back to your command line and enter the command:
 
-    php -S 0:8888 server.php public
+    php -S 0:8888 -t public server.php
 
 PHP could do a better job of the syntax of this line, but it's easy enough to use. It specifies that you want to run the server program "server.php" on port 8888. Read the little snippet of text that appears to confirm that your server is running and ready to accept requests. If it is, go into google chrome and point your web browser to http://localhost:8888/home.html. You should see your welcome text and image. Try going to http://localhost:8888/images/funny.png (or whatever you named it). You should see your image but without the rest of the HTML document. Lastly, try browsing to any other URL. You should see the message written at the bottom of your server.php.
 
