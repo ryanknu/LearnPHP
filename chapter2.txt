@@ -1,0 +1,101 @@
+Request and Main method
+
+We're going to start adding some much-needed structure to our web server. It's currently serving static assets correctly, and that's great, but we have the power of a first-class programming language at our disposal, so we should make good use of that.
+
+We're going to create a folder called "App" that all of our PHP is going to go inside. This is to segregate the PHP code from the html and image files that we're going to be using to show content to the end users. Separation of logic and user interface is an important-but-often-overlooked part of any large scale system. Luckily, lately there has been a lot more emphasis on this style of design.
+
+Inside your App folder, make a file called Main.php. In this file we're going to define a simple class with two static methods, one for doing any one-time set up and another for running the main code of the server.
+
+    <?php
+    
+    namespace App;
+    
+    class Main
+    {
+        public static function setup()
+        {
+        }
+        
+        public static function run()
+        {
+        }
+    }
+
+The namespace, "App" just tells the PHP how to logically organize classes. They are equivalent to packages in Java, where java.io.File would be in the java.io package.
+
+For now, this is good enough. Even though there's no logic in these methods, let's add the calls to them to the server.php file, so that we don't forget to do so later. Replace your echo "Not found" line with the lines
+
+    App\Main::setup();
+    App\Main::run();
+
+Very cool. Now we need some tools to work with. The most basic and important operation of the server is to parse the request URI and return the correct resource for that request. To do this, create the file HTTP/Request.php. It should contain the following code:
+
+    <?php
+
+    namespace App\HTTP;
+
+    class Request
+    {
+        private $path;
+    
+        public function getPath()
+        {
+            return $this->path;
+        }
+    
+        public static function getRequest()
+        {
+            $request = new Request;
+            $request->path = $_SERVER['REQUEST_URI'];
+            return $request;
+        }
+    }
+
+This should look somewhat familiar, even to non-PHP programmers. It defines a class, App\HTTP\Request, which has a private variable path with a getter for that path. It also defines a static function, which will create a Request object from whatever data is available to the request object. 
+
+It turns out that PHP does have what it calls a `super-global variable`, $_SERVER, which can be accessed from anywhere in a PHP program. Just because you can do something doesn't mean you should, however, we do need to access them somewhere in order to make use of them, so we're going to limit access to *all* super-global variables to the Request class.
+
+Super-globals aside, we're going to have to access an element of this variable to get at the request URI. We do this using the bracket ([ ]) syntax, with a string parameter inside the brackets. This particular string will actually give you the request `path`, and not a full URI. We're going to set it into the request object as `->path`, and return the request object.
+
+Moving back into our main method, let's add some functionality into the run method to have the code do something.
+
+    public static function run()
+    {
+        require(__DIR__ . '/HTTP/Request.php');
+        $request = HTTP\Request::getRequest();
+        
+        if ( $request->getPath() === '/' ) {
+            echo file_get_contents('public/home.html');
+        }
+        else {
+            echo 'Not found';
+        }
+    }
+
+What is going on here? We're going to start by calling the file that contains our Request class, so that we have it available to use. Then, we'll call our static method to get the Request object populated with variables from global sources. Finally, we check to see if the path is "/" (no path) and write out the contents of our public/home.html file. 
+
+Go ahead an try this in your web browser. Go to http://localhost:8888 and notice how your home page is now drawing at this path.
+
+You may be thinking to yourself, if my PHP program gets really big I'm going to have *a lot* of require statements in it. And you'd be right, if you wrote your program this way. Lots of old PHP projects are large bundled nests of require statements. Luckily, the designers of PHP came up with a way to combat this: the autoload system. When it comes across a class that it does not recognize, it calls a function the purpose of which is to include the file that it is trying to use.
+
+I could dive deep into autoloaders, but it's not really important for our purposes here. Most autoloaders are boiler plate code, so instead of asking you to write an autoloader I will just give you the entire `setup()` function with a boiler plate autoloader already written and tested.
+
+    public static function setup()
+    {
+        $my_namespace = __NAMESPACE__;
+        spl_autoload_register(function($class) use($my_namespace) {
+            if ( strpos($class, $my_namespace) === 0 ) {
+                $class = str_replace('\\', DIRECTORY_SEPARATOR, $class);
+                $class = substr($class, strlen($my_namespace) + 1);
+                include(__DIR__ . DIRECTORY_SEPARATOR . $class . '.php');
+            }
+        });
+    }
+
+Exercise 3:
+
+On your own, create your own file in public for "not found" situations. Modify the run method to echo the contents of this file instead of writing them in a string.
+
+Exercise 4:
+
+On your own, create a page that is an "About the Author". Make the path to this resource be "/about". Put a link on the home page to this page.
